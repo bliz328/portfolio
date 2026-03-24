@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>numbr guessr</title>
+
+</head>
+<body>
+
+<h1>numbr guessr</h1>
+
+<!-- MENU -->
+<div id="menu" class="screen">
+  <div class="row">
+    <div class="box big" id="highscores"></div>
+
+    <div class="center">
+      <div class="box">
+        <p>Choose your mode</p>
+        <button onclick="mode='single'">Singleplayer</button>
+        <button onclick="mode='multi'">Multiplayer</button>
+      </div>
+
+      <input id="username" placeholder="Username">
+      <button onclick="goDifficulty()">Play</button>
+    </div>
+
+    <div class="box big" id="leaderboard"></div>
+  </div>
+</div>
+
+<!-- DIFFICULTY -->
+<div id="difficulty" class="screen hidden center">
+  <div class="box">Difficultynes</div>
+  <button onclick="setDifficulty(1,10,'Easy')">Easy (1-10)</button>
+  <button onclick="setDifficulty(1,100,'Normal')">Normal (1-100)</button>
+  <button onclick="setDifficulty(1,1000,'Hard')">Hard (1-1000)</button>
+  <button onclick="setDifficulty(1,1000000,'Insane')">Insane (1-1000000)</button>
+</div>
+
+<!-- GAME -->
+<div id="game" class="screen hidden">
+  <div class="row">
+    <div class="box big" id="lastGuesses"></div>
+
+    <div class="center">
+      <input id="guess" placeholder="Make your guess">
+      <button onclick="guessNumber()">Guess!!!</button>
+      <p id="result"></p>
+    </div>
+
+    <div class="box big" id="best"></div>
+        <button onclick="restartGame()">Restart 🔄</button>
+      <button onclick="backToMenu()">Main Menu ⬅️</button>
+    </div>
+
+    <div class="box big" id="best"></div>
+  </div>
+</div>
+
+<script>
+let mode = 'single';
+let min, max, secret, attempts=0, username, difficulty;
+let guesses = [];
+
+let leaderboard = JSON.parse(localStorage.getItem('lb')) || {
+  Easy:null,
+  Normal:null,
+  Hard:null,
+  Insane:null
+};
+
+function goDifficulty(){
+  username = document.getElementById('username').value || 'Player';
+  document.getElementById('menu').classList.add('hidden');
+  document.getElementById('difficulty').classList.remove('hidden');
+}
+
+function setDifficulty(a,b,name){
+  min=a; max=b; difficulty=name;
+
+  if(mode==='multi'){
+    secret = parseInt(prompt('Player 1: enter number'));
+    alert('Player 2 turn');
+  } else {
+    secret = Math.floor(Math.random()*(max-min+1))+min;
+  }
+
+  attempts=0;
+  guesses=[];
+
+  document.getElementById('difficulty').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+
+  updateUI();
+}
+
+function guessNumber(){
+  let g = parseInt(document.getElementById('guess').value);
+  if(isNaN(g)) return;
+
+  attempts++;
+  guesses.push(g);
+
+  if(g>secret){
+    document.getElementById('result').innerText='Lower!';
+  } else if(g<secret){
+    document.getElementById('result').innerText='Higher!';
+  } else {
+    document.getElementById('result').innerText='🎉 Correct!';
+    saveScore();
+  }
+
+  updateUI();
+}
+
+function updateUI(){
+  document.getElementById('lastGuesses').innerHTML = 'Last Guesses:<br>'+guesses.join('<br>');
+
+  let best = leaderboard[difficulty];
+  document.getElementById('best').innerHTML = 'Personal Best:<br>' + (best ? best.name+' ('+best.score+')':'---');
+
+  // show highscores on menu
+  let hs = '';
+  for(let d in leaderboard){
+    if(leaderboard[d]){
+      hs += d+': '+leaderboard[d].score+'<br>';
+    } else {
+      hs += d+': ---<br>';
+    }
+  }
+  document.getElementById('highscores').innerHTML = 'Your Highscore (attempts)<br><br>'+hs;
+}
+
+function saveScore(){
+  if(!leaderboard[difficulty] || attempts < leaderboard[difficulty].score){
+    leaderboard[difficulty] = {name:username, score:attempts};
+    localStorage.setItem('lb', JSON.stringify(leaderboard));
+  }
+}
+
+function restartGame(){
+  attempts = 0;
+  guesses = [];
+
+  if(mode === 'single'){
+    secret = Math.floor(Math.random()*(max-min+1))+min;
+  } else {
+    secret = parseInt(prompt('Player 1: enter new number'));
+    alert('Player 2 turn');
+  }
+
+  document.getElementById('result').innerText = '';
+  document.getElementById('guess').value = '';
+
+  updateUI();
+}
+
+function backToMenu(){
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('difficulty').classList.add('hidden');
+  document.getElementById('menu').classList.remove('hidden');
+
+  document.getElementById('result').innerText = '';
+  document.getElementById('guess').value = '';
+}
+
+// init display
+updateUI();
+</script>
+
+<style>
+body {
+  background:#d9d6d6;
+  font-family: Arial;
+  margin:0;
+}
+h1 {
+  margin-left:20px;
+}
+.screen {
+  background:#eee;
+  margin:20px;
+  padding:30px;
+  border-radius:15px;
+}
+.row {
+  display:flex;
+  justify-content:space-between;
+}
+.box {
+  background:#bbb;
+  padding:20px;
+  margin:10px;
+  text-align:center;
+  border-radius:5px;
+}
+.big {
+  width:200px;
+  height:250px;
+}
+.center {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+button {
+  padding:15px 30px;
+  margin:10px;
+  border:none;
+  background:#bbb;
+  cursor:pointer;
+}
+input {
+  padding:10px;
+  margin:10px;
+}
+.hidden { display:none; }
+</style>
+
+</body>
+</html>
+
+
